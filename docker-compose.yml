@@ -6,6 +6,9 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
+      - OLLAMA_KEEP_ALIVE=5m
+      - OLLAMA_FLASH_ATTENTION=1
+      - OLLAMA_MAX_LOADED_MODELS=1
     ports:
       - "11434:11434"
     volumes:
@@ -287,7 +290,7 @@ services:
       - BASE_DIRECTORY=/basedir
       - SECURITY_LEVEL=normal
       - USE_UV=true
-      - COMFY_CMDLINE_EXTRA=--fast
+      - COMFY_CMDLINE_EXTRA=--fast --preview-method latent2rgb
       - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
     deploy:
       resources:

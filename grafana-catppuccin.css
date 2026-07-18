@@ -1,0 +1,68 @@
+/* Grafana Catppuccin Mocha Theme */
+
+/* Body - Catppuccin base */
+body.theme-dark {
+  background-color: #1e1e2e !important;
+}
+
+/* Sidebar - Catppuccin mantle */
+[data-testid="data-testid navigation mega-menu"] {
+  background-color: #181825 !important;
+  border-right: 1px solid rgba(69, 71, 90, 0.35) !important;
+}
+
+/* Top header bar - Catppuccin mantle */
+body.theme-dark header {
+  background-color: #181825 !important;
+  border-bottom: 1px solid rgba(69, 71, 90, 0.35) !important;
+  box-shadow: none !important;
+}
+
+/* Panel cards - mantle + mauve-tinted border */
+[class*="panel-container"],
+[data-testid*="Panel header"] {
+  background-color: #181825 !important;
+  border-color: rgba(69, 71, 90, 0.5) !important;
+}
+
+/* Active nav item - Catppuccin mauve */
+body.theme-dark [aria-current="page"] {
+  background-color: rgba(203, 166, 247, 0.12) !important;
+  color: #cba6f7 !important;
+}
+body.theme-dark [aria-current="page"] svg {
+  color: #cba6f7 !important;
+  fill: #cba6f7 !important;
+}
+
+/* Links - Catppuccin blue */
+body.theme-dark a:not([role="button"]):not([class*="button"]):not([class*="Button"]) {
+  color: #89b4fa !important;
+}
+
+/* Dashboard row panel titles */
+body.theme-dark [data-testid*="Row title"] {
+  color: #cba6f7 !important;
+}
+
+/* Scrollbars */
+body.theme-dark *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+body.theme-dark *::-webkit-scrollbar-track {
+  background: #11111b;
+}
+body.theme-dark *::-webkit-scrollbar-thumb {
+  background: #45475a;
+  border-radius: 3px;
+}
+body.theme-dark *::-webkit-scrollbar-thumb:hover {
+  background: #6c7086;
+}
+
+/* Subtle mauve glow on panel hover */
+[class*="panel-container"]:hover {
+  border-color: rgba(203, 166, 247, 0.25) !important;
+  transition: border-color 0.2s ease !important;
+}

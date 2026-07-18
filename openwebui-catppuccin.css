@@ -1,0 +1,51 @@
+/* Catppuccin Mocha for Open-WebUI — loaded after Tailwind */
+
+/* Main backgrounds */
+html.dark body,
+html.dark #app { background-color: #1e1e2e !important; }
+
+html.dark #sidebar { background-color: #181825 !important; border-right: 1px solid rgba(69,71,90,0.4) !important; }
+
+/* Top navbar / header strip */
+html.dark header,
+html.dark nav { background-color: #181825 !important; }
+
+/* Panels, cards, dropdowns, modals */
+html.dark [class*="bg-gray-850"],
+html.dark [class*="dark:bg-gray-850"] { background-color: #1e1e2e !important; }
+html.dark [class*="bg-gray-800"],
+html.dark [class*="dark:bg-gray-800"] { background-color: #313244 !important; }
+html.dark [class*="bg-gray-900"],
+html.dark [class*="dark:bg-gray-900"] { background-color: #181825 !important; }
+html.dark [class*="bg-gray-950"],
+html.dark [class*="dark:bg-gray-950"] { background-color: #11111b !important; }
+
+/* Chat input area */
+html.dark textarea,
+html.dark input[type="text"],
+html.dark input[type="search"] {
+  background-color: #313244 !important;
+  border-color: #45475a !important;
+  color: #cdd6f4 !important;
+}
+html.dark textarea:focus,
+html.dark input:focus { border-color: #cba6f7 !important; outline: none !important; }
+
+/* Send button */
+html.dark button.bg-black { background-color: #cba6f7 !important; color: #1e1e2e !important; }
+
+/* Hover effects on sidebar items */
+html.dark button:hover .hover\:bg-gray-100,
+html.dark [class*="hover:bg-gray-100"]:hover { background-color: rgba(203,166,247,0.08) !important; }
+
+/* Text colours */
+html.dark [class*="text-gray-100"],
+html.dark [class*="dark:text-gray-100"] { color: #cdd6f4 !important; }
+html.dark [class*="text-gray-400"],
+html.dark [class*="dark:text-gray-400"] { color: #a6adc8 !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #11111b; }
+::-webkit-scrollbar-thumb { background: #45475a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #6c7086; }

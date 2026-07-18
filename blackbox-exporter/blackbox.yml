@@ -1,0 +1,21 @@
+modules:
+  http_alive:
+    prober: http
+    timeout: 5s
+    http:
+      method: GET
+      valid_status_codes: [200, 301, 302, 303, 307, 308]
+      follow_redirects: false
+      preferred_ip_protocol: "ip4"
+
+  # Proxmox and Portainer both serve their web UI over HTTPS with a self-signed cert.
+  http_alive_insecure_tls:
+    prober: http
+    timeout: 5s
+    http:
+      method: GET
+      valid_status_codes: [200, 301, 302, 303, 307, 308]
+      follow_redirects: false
+      preferred_ip_protocol: "ip4"
+      tls_config:
+        insecure_skip_verify: true

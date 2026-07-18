@@ -1,0 +1,367 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    restart: unless-stopped
+    ports:
+      - "3002:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - open-webui-data:/app/backend/data
+      - ./openwebui-catppuccin.css:/app/build/static/custom.css:ro
+      - ./owui-index.html:/app/build/index.html:ro
+  adguard:
+    image: adguard/adguardhome:latest
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "3001:3000/tcp"
+    volumes:
+      - adguard-work:/opt/adguardhome/work
+      - adguard-conf:/opt/adguardhome/conf
+
+  adguard-proxy:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    volumes:
+      - ./nginx-adguard.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - adguard
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=90d"
+      - "--web.enable-lifecycle"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus-rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+
+  pve-exporter:
+    image: prompve/prometheus-pve-exporter:latest
+    restart: unless-stopped
+    ports:
+      - "9221:9221"
+    volumes:
+      - ./pve-exporter/pve.yml:/etc/prometheus/pve.yml
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8085:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+
+  gpu-exporter:
+    image: utkuozdemir/nvidia_gpu_exporter:latest
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "9835:9835"
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    restart: unless-stopped
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./blackbox-exporter/blackbox.yml:/etc/blackbox_exporter/config.yml
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    restart: unless-stopped
+    command: ["serve"]
+    ports:
+      - "8090:80"
+    volumes:
+      - ./ntfy/server.yml:/etc/ntfy/server.yml
+      - ntfy-data:/var/lib/ntfy
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./alertmanager/webhook_token:/etc/alertmanager/webhook_token:ro
+      - alertmanager-data:/alertmanager
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-catppuccin.css:/usr/share/grafana/public/catppuccin.css:ro
+      - ./grafana-index.html:/usr/share/grafana/public/views/index.html:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable-tensorrt
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+      - "8554:8554"
+    volumes:
+      - /mnt/media/frigate/config:/config
+      - /mnt/media/frigate/storage:/media/frigate
+    shm_size: "512mb"
+
+  nextcloud:
+    image: nextcloud:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - /mnt/media/nextcloud:/var/www/html
+    environment:
+      - NEXTCLOUD_TRUSTED_DOMAINS=100.99.62.65
+
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    restart: unless-stopped
+    ports:
+      - "8096:8096"
+    volumes:
+      - /mnt/media/jellyfin:/media
+      - jellyfin-config:/config
+
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    restart: unless-stopped
+    env_file:
+      - ./homarr-secret.key.env
+    ports:
+      - "7575:7575"
+    volumes:
+      - homarr-new-appdata:/appdata
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - WEBUI_PORT=8081
+    ports:
+      - "8081:8081"
+      - "6881:6881"
+    volumes:
+      - qbit-config:/config
+      - /mnt/media/downloads:/downloads
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - "7878:7878"
+    volumes:
+      - radarr-config:/config
+      - /mnt/media:/media
+      - ./arr-catppuccin.css:/app/radarr/bin/UI/Content/catppuccin.css:ro
+      - ./radarr-index.html:/app/radarr/bin/UI/index.html:ro
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - "8989:8989"
+    volumes:
+      - sonarr-config:/config
+      - /mnt/media:/media
+      - ./arr-catppuccin.css:/app/sonarr/bin/UI/Content/catppuccin.css:ro
+      - ./sonarr-index.html:/app/sonarr/bin/UI/index.html:ro
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - "9696:9696"
+    volumes:
+      - prowlarr-config:/config
+      - ./arr-catppuccin.css:/app/prowlarr/bin/UI/Content/catppuccin.css:ro
+      - ./prowlarr-index.html:/app/prowlarr/bin/UI/index.html:ro
+
+  comfyui:
+    image: mmartial/comfyui-nvidia-docker:latest
+    container_name: comfyui-nvidia
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - WANTED_UID=1000
+      - WANTED_GID=1000
+      - BASE_DIRECTORY=/basedir
+      - SECURITY_LEVEL=normal
+      - USE_UV=true
+      - COMFY_CMDLINE_EXTRA=--fast
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8188:8188"
+    volumes:
+      - /home/docker/docker/comfyui/run:/comfy/mnt
+      - /home/docker/docker/comfyui/basedir:/basedir
+
+  redmine-db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=redmine
+      - POSTGRES_USER=redmine
+      - POSTGRES_PASSWORD=0cd91de8164e03b5e1f98e3942a304e9
+    volumes:
+      - redmine-db-data:/var/lib/postgresql/data
+
+  redmine:
+    build: ./redmine-custom
+    restart: unless-stopped
+    depends_on:
+      - redmine-db
+    environment:
+      - REDMINE_DB_POSTGRES=redmine-db
+      - REDMINE_DB_DATABASE=redmine
+      - REDMINE_DB_USERNAME=redmine
+      - REDMINE_DB_PASSWORD=0cd91de8164e03b5e1f98e3942a304e9
+      - REDMINE_SECRET_KEY_BASE=6cf7979eefa626784baf661d8046df5f3e0b475affc9f2363e83098fd17346eb
+      - REDMINE_PLUGINS_MIGRATE=1
+    ports:
+      - "3003:3000"
+    volumes:
+      - redmine-files:/usr/src/redmine/files
+
+  redmine-ai:
+    build: ./redmine-ai
+    restart: unless-stopped
+    depends_on:
+      - redmine
+    environment:
+      - REDMINE_URL=http://redmine:3000
+      - REDMINE_API_KEY=f49b2b2e93b42bb03721c0ca491bce36fae7e7cc
+      - OLLAMA_URL=http://ollama:11434/api/chat
+      - RM_MODEL=qwen2.5:7b
+    ports:
+      - "8001:8000"
+    volumes:
+      - redmine-ai-data:/data
+
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:10
+    restart: unless-stopped
+    ports:
+      - "3004:3000"
+      - "2222:22"
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    volumes:
+      - forgejo-data:/data
+
+volumes:
+  jellyfin-config:
+  qbit-config:
+  radarr-config:
+  sonarr-config:
+  prowlarr-config:
+  homarr-new-appdata:
+  frigate-storage:
+  prometheus-data:
+  grafana-data:
+  adguard-work:
+  adguard-conf:
+  ollama-data:
+  open-webui-data:
+  ntfy-data:
+  alertmanager-data:
+  redmine-db-data:
+  redmine-files:
+  redmine-ai-data:
+  forgejo-data:

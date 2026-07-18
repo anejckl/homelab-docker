@@ -1,0 +1,50 @@
+/* Catppuccin Mocha - Radarr / Sonarr / Prowlarr */
+
+/* Body */
+body { background-color: #1e1e2e !important; }
+
+/* Sidebar */
+[class*="PageSidebar-sidebar"] {
+  background-color: #181825 !important;
+  border-right: 1px solid rgba(69,71,90,0.4) !important;
+}
+[class*="PageSidebarItem-link"] { color: #a6adc8 !important; }
+[class*="PageSidebarItem-link"]:hover {
+  color: #cba6f7 !important;
+  background-color: rgba(203,166,247,0.08) !important;
+}
+[class*="PageSidebarItem-"][class*="isActive"] [class*="PageSidebarItem-link"],
+[class*="PageSidebarItem-"][class*="isActive"] {
+  color: #cba6f7 !important;
+  background-color: rgba(203,166,247,0.12) !important;
+}
+
+/* Header / toolbar */
+[class*="PageToolbar-toolbar"],
+[class*="PageHeader-header"] {
+  background-color: #181825 !important;
+  border-bottom: 1px solid rgba(69,71,90,0.4) !important;
+}
+
+/* Links */
+[class*="Link-to"] { color: #89b4fa !important; }
+[class*="Link-to"]:hover { color: #b4d0fb !important; }
+
+/* Primary buttons → Catppuccin mauve */
+[class*="Button-primary"] {
+  background-color: #cba6f7 !important;
+  border-color: #cba6f7 !important;
+  color: #1e1e2e !important;
+}
+
+/* Table rows */
+[class*="TableRow-"]:hover,
+[class*="VirtualTableRow-"]:hover {
+  background-color: rgba(203,166,247,0.06) !important;
+}
+
+/* Scrollbars */
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: #11111b; }
+*::-webkit-scrollbar-thumb { background: #45475a; border-radius: 3px; }
+*::-webkit-scrollbar-thumb:hover { background: #6c7086; }

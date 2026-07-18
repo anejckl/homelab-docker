@@ -1,0 +1,8 @@
+*.env
+*secret*
+homarr-secret.key.env
+backups/
+*.bak
+alertmanager/webhook_token
+ntfy/server.yml
+pve-exporter/pve.yml

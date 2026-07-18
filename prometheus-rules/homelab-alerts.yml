@@ -1,0 +1,65 @@
+groups:
+  - name: homelab-storage
+    rules:
+      - alert: ProxmoxStoragePoolDiskWarning
+        expr: 100 * pve_disk_usage_bytes{id=~"storage/.*"} / pve_disk_size_bytes{id=~"storage/.*"} >= 75
+        for: 10m
+        labels: {severity: warning}
+        annotations: {summary: "Proxmox storage pool {{ $labels.id }} is {{ $value | printf \"%.1f\" }}% full"}
+      - alert: ProxmoxStoragePoolDiskCritical
+        expr: 100 * pve_disk_usage_bytes{id=~"storage/.*"} / pve_disk_size_bytes{id=~"storage/.*"} >= 90
+        for: 10m
+        labels: {severity: critical}
+        annotations: {summary: "Proxmox storage pool {{ $labels.id }} is {{ $value | printf \"%.1f\" }}% full"}
+      - alert: NodeRootDiskWarning
+        expr: 100 * (1 - node_filesystem_avail_bytes{mountpoint="/",fstype!="tmpfs"} / node_filesystem_size_bytes{mountpoint="/",fstype!="tmpfs"}) >= 75
+        for: 10m
+        labels: {severity: warning}
+        annotations: {summary: "docker-vm root filesystem is {{ $value | printf \"%.1f\" }}% full"}
+      - alert: NodeRootDiskCritical
+        expr: 100 * (1 - node_filesystem_avail_bytes{mountpoint="/",fstype!="tmpfs"} / node_filesystem_size_bytes{mountpoint="/",fstype!="tmpfs"}) >= 90
+        for: 10m
+        labels: {severity: critical}
+        annotations: {summary: "docker-vm root filesystem is {{ $value | printf \"%.1f\" }}% full"}
+
+  - name: homelab-availability
+    rules:
+      # Deliberately NOT alerting on pve_up{id=~"qemu/.*|lxc/.*"} == 0 (per-guest down) -
+      # health_snapshot.py already owns that signal via list_vms/Proxmox API.
+      - alert: MonitoringTargetDown
+        expr: up{job=~"node-exporter|cadvisor|gpu-exporter|pve|smartctl-exporter"} == 0
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Prometheus lost scrape target {{ $labels.job }} ({{ $labels.instance }})"}
+      # Actual HTTP-level liveness of web apps, distinct from MonitoringTargetDown above -
+      # a container can be "running" (and pass cAdvisor/Docker healthcheck) while its
+      # web server is hung/deadlocked and answering nothing. blackbox-exporter actually
+      # requests each URL and checks for a real response.
+      - alert: WebServiceDown
+        expr: probe_success{job=~"blackbox-http|blackbox-https-selfsigned"} == 0
+        for: 3m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.instance }} is not responding to HTTP requests"}
+
+  - name: homelab-resources
+    rules:
+      - alert: HostCPUSustainedHigh
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) >= 90
+        for: 15m
+        labels: {severity: warning}
+        annotations: {summary: "docker-vm CPU has been >=90% for 15m ({{ $value | printf \"%.1f\" }}%)"}
+      - alert: HostMemorySustainedHigh
+        expr: 100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) >= 90
+        for: 15m
+        labels: {severity: warning}
+        annotations: {summary: "docker-vm memory has been >=90% for 15m ({{ $value | printf \"%.1f\" }}%)"}
+      - alert: GPUTemperatureWarning
+        expr: nvidia_smi_temperature_gpu >= 80
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "GPU temperature is {{ $value }}°C"}
+      - alert: GPUTemperatureCritical
+        expr: nvidia_smi_temperature_gpu >= 88
+        for: 5m
+        labels: {severity: critical}
+        annotations: {summary: "GPU temperature is {{ $value }}°C (critical)"}

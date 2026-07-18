@@ -385,6 +385,17 @@ services:
       - /home/docker/docker/whisper-processor:/app
     command: python3 /app/process_clips.py
 
+  watchtower:
+    image: containrrr/watchtower:1.7.1
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_SCHEDULE=0 0 3 * * *
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_ROLLING_RESTART=true
+      - TZ=Europe/Ljubljana
+      - DOCKER_API_VERSION=1.41
 
 volumes:
   jellyfin-config:

@@ -345,6 +345,33 @@ services:
     volumes:
       - forgejo-data:/data
 
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest-gpu
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      - ASR_MODEL=base
+      - ASR_ENGINE=faster_whisper
+      - ASR_LANG=sl
+    volumes:
+      - whisper-models:/root/.cache/whisper
+
+  whisper-processor:
+    build: ./whisper-processor
+    restart: unless-stopped
+    depends_on:
+      - whisper
+    environment:
+      - FRIGATE_URL=http://frigate:5000
+      - WHISPER_URL=http://whisper:9000
+      - DB_PATH=/data/transcripts.db
+    volumes:
+      - whisper-db:/data
+      - /home/docker/docker/whisper-processor:/app
+    command: python3 /app/process_clips.py
+
+
 volumes:
   jellyfin-config:
   qbit-config:
@@ -365,3 +392,5 @@ volumes:
   redmine-files:
   redmine-ai-data:
   forgejo-data:
+  whisper-models:
+  whisper-db:

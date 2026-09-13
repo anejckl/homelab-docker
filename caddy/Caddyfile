@@ -1,4 +1,0 @@
-:443 {
-    reverse_proxy frigate:5000
-    tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem
-}

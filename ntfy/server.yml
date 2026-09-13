@@ -1,8 +1,0 @@
-# base-url must be reachable BY THE PHONE (Tailscale IP; works on LAN too via the TS app)
-base-url: "http://100.99.62.65:8090"
-# iOS push relay: self-hosted ntfy cannot reach Apple push directly; ntfy.sh forwards a
-# wake-up containing the message id ONLY (no content) so the iOS app fetches from base-url
-upstream-base-url: "https://ntfy.sh"
-listen-http: ":80"
-auth-file: "/var/lib/ntfy/auth.db"
-auth-default-access: "deny-all"

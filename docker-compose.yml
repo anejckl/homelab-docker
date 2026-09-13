@@ -146,7 +146,7 @@ services:
       - ./grafana-catppuccin.css:/usr/share/grafana/public/catppuccin.css:ro
       - ./grafana-index.html:/usr/share/grafana/public/views/index.html:ro
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=
+      - GF_SECURITY_ADMIN_PASSWORD=admin
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -302,8 +302,8 @@ services:
     ports:
       - "8188:8188"
     volumes:
-      - /mnt/media/comfyui/run:/comfy/mnt
-      - /mnt/media/comfyui/basedir:/basedir
+      - /home/docker/docker/comfyui/run:/comfy/mnt
+      - /home/docker/docker/comfyui/basedir:/basedir
 
   redmine-db:
     image: postgres:16
@@ -311,7 +311,7 @@ services:
     environment:
       - POSTGRES_DB=redmine
       - POSTGRES_USER=redmine
-      - POSTGRES_PASSWORD=
+      - POSTGRES_PASSWORD=0cd91de8164e03b5e1f98e3942a304e9
     volumes:
       - redmine-db-data:/var/lib/postgresql/data
 
@@ -324,14 +324,13 @@ services:
       - REDMINE_DB_POSTGRES=redmine-db
       - REDMINE_DB_DATABASE=redmine
       - REDMINE_DB_USERNAME=redmine
-      - REDMINE_DB_PASSWORD=
-      - REDMINE_SECRET_KEY_BASE=
+      - REDMINE_DB_PASSWORD=0cd91de8164e03b5e1f98e3942a304e9
+      - REDMINE_SECRET_KEY_BASE=6cf7979eefa626784baf661d8046df5f3e0b475affc9f2363e83098fd17346eb
       - REDMINE_PLUGINS_MIGRATE=1
     ports:
       - "3003:3000"
     volumes:
       - redmine-files:/usr/src/redmine/files
-      - /home/docker/repos:/repos:ro
 
   redmine-ai:
     build: ./redmine-ai
@@ -340,7 +339,7 @@ services:
       - redmine
     environment:
       - REDMINE_URL=http://redmine:3000
-      - REDMINE_API_KEY=
+      - REDMINE_API_KEY=f49b2b2e93b42bb03721c0ca491bce36fae7e7cc
       - OLLAMA_URL=http://ollama:11434/api/chat
       - RM_MODEL=qwen2.5:7b
     ports:
@@ -365,21 +364,10 @@ services:
     restart: unless-stopped
     ports:
       - "9000:9000"
-    runtime: nvidia
     environment:
-      - ASR_MODEL=small
+      - ASR_MODEL=base
       - ASR_ENGINE=faster_whisper
       - ASR_LANG=sl
-      - ASR_COMPUTE_TYPE=float16
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
     volumes:
       - whisper-models:/root/.cache/whisper
 
@@ -392,7 +380,6 @@ services:
       - FRIGATE_URL=http://frigate:5000
       - WHISPER_URL=http://whisper:9000
       - DB_PATH=/data/transcripts.db
-      - PYTHONUNBUFFERED=1
     volumes:
       - whisper-db:/data
       - /home/docker/docker/whisper-processor:/app
@@ -408,40 +395,7 @@ services:
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_ROLLING_RESTART=true
       - TZ=Europe/Ljubljana
-      - FATHOM_USER=
-      - FATHOM_PASSWORD=
-      - FATHOM_SECRET=
       - DOCKER_API_VERSION=1.41
-
-  fathom:
-    build: ./fathom
-    restart: unless-stopped
-    ports:
-      - "8091:8000"
-    environment:
-      - OLLAMA_URL=http://ollama:11434
-      - OLLAMA_MODEL=llama3.2:latest
-      - RETENTION_DAYS=30
-      - RATE_LIMIT=20
-      - TZ=Europe/Ljubljana
-      - FATHOM_USER=
-      - FATHOM_PASSWORD=
-      - FATHOM_SECRET=
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - fathom-data:/data
-
-  caddy-frigate:
-    image: caddy:alpine
-    restart: unless-stopped
-    ports:
-      - "5443:443"
-    volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-      - ./caddy/certs:/etc/caddy/certs:ro
-      - caddy-data:/data
-    depends_on:
-      - frigate
 
 volumes:
   jellyfin-config:
@@ -465,5 +419,3 @@ volumes:
   forgejo-data:
   whisper-models:
   whisper-db:
-  fathom-data:
-  caddy-data:

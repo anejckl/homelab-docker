@@ -1,5 +1,0 @@
-default:
-  user: ops-agent@pve
-  token_name: monitoring
-  token_value: YOUR_PVE_API_TOKEN_VALUE
-  verify_ssl: false

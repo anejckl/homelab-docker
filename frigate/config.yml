@@ -1,0 +1,77 @@
+mqtt:
+  enabled: false
+
+detectors:
+  onnx:
+    type: onnx
+
+model:
+  model_type: yolo-generic
+  width: 320
+  height: 320
+  input_tensor: nchw
+  input_dtype: float
+  path: /config/model_cache/onnx/yolov9-t-320.onnx
+  labelmap_path: /labelmap/coco-80.txt
+
+ffmpeg:
+  hwaccel_args: preset-nvidia-h264
+
+detect:
+  enabled: true
+  fps: 5
+
+cameras:
+  dvorisce:
+    ffmpeg:
+      inputs:
+        - path: 
+            rtsp://admin:@192.168.1.108:554/cam/realmonitor?channel=1&subtype=0
+          roles:
+            - detect
+            - record
+            - audio
+    audio:
+      enabled: true
+      min_volume: 500
+      listen:
+        - bark
+        - fire_alarm
+        - scream
+        - speech
+        - yell
+  terasa:
+    ffmpeg:
+      inputs:
+        - path: 
+            rtsp://admin:@192.168.1.137:554/cam/realmonitor?channel=1&subtype=0
+          roles:
+            - detect
+            - record
+            - audio
+    audio:
+      enabled: true
+      min_volume: 500
+      listen:
+        - bark
+        - fire_alarm
+        - scream
+        - speech
+        - yell
+
+record:
+  enabled: true
+  alerts:
+    pre_capture: 5
+    post_capture: 10
+    retain:
+      days: 14
+      mode: motion
+  detections:
+    pre_capture: 5
+    post_capture: 10
+    retain:
+      days: 7
+      mode: motion
+
+version: 0.18-0

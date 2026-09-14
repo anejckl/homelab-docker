@@ -234,7 +234,7 @@ services:
       - "6881:6881"
     volumes:
       - qbit-config:/config
-      - /mnt/media/downloads:/downloads
+      - /mnt/media:/media
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -302,8 +302,8 @@ services:
     ports:
       - "8188:8188"
     volumes:
-      - /home/docker/docker/comfyui/run:/comfy/mnt
-      - /home/docker/docker/comfyui/basedir:/basedir
+      - /mnt/media/comfyui/run:/comfy/mnt
+      - /mnt/media/comfyui/basedir:/basedir
 
   redmine-db:
     image: postgres:16
@@ -331,6 +331,7 @@ services:
       - "3003:3000"
     volumes:
       - redmine-files:/usr/src/redmine/files
+      - /home/docker/repos:/repos:ro
 
   redmine-ai:
     build: ./redmine-ai
@@ -364,10 +365,21 @@ services:
     restart: unless-stopped
     ports:
       - "9000:9000"
+    runtime: nvidia
     environment:
-      - ASR_MODEL=base
+      - ASR_MODEL=small
       - ASR_ENGINE=faster_whisper
       - ASR_LANG=sl
+      - ASR_COMPUTE_TYPE=float16
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     volumes:
       - whisper-models:/root/.cache/whisper
 
@@ -380,6 +392,7 @@ services:
       - FRIGATE_URL=http://frigate:5000
       - WHISPER_URL=http://whisper:9000
       - DB_PATH=/data/transcripts.db
+      - PYTHONUNBUFFERED=1
     volumes:
       - whisper-db:/data
       - /home/docker/docker/whisper-processor:/app
@@ -395,7 +408,40 @@ services:
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_ROLLING_RESTART=true
       - TZ=Europe/Ljubljana
+      - FATHOM_USER=admin
+      - FATHOM_PASSWORD=fathom
+      - FATHOM_SECRET=fathom-secret-change-me
       - DOCKER_API_VERSION=1.41
+
+  fathom:
+    build: ./fathom
+    restart: unless-stopped
+    ports:
+      - "8091:8000"
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=llama3.2:latest
+      - RETENTION_DAYS=30
+      - RATE_LIMIT=20
+      - TZ=Europe/Ljubljana
+      - FATHOM_USER=admin
+      - FATHOM_PASSWORD=fathom
+      - FATHOM_SECRET=fathom-secret-change-me
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - fathom-data:/data
+
+  caddy-frigate:
+    image: caddy:alpine
+    restart: unless-stopped
+    ports:
+      - "5443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/certs:/etc/caddy/certs:ro
+      - caddy-data:/data
+    depends_on:
+      - frigate
 
 volumes:
   jellyfin-config:
@@ -419,3 +465,5 @@ volumes:
   forgejo-data:
   whisper-models:
   whisper-db:
+  fathom-data:
+  caddy-data:
